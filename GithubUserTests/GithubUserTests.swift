@@ -6,28 +6,33 @@
 //
 
 import XCTest
+import RxBlocking
 @testable import GithubUser
 
+import CoreData
+
 class GithubUserTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    let githubRepository = GithubUserRepository(network: DefaultNetwork(baseURL: "https://api.github.com"))
+    func testRepository_searchGithubUsers() {
+        
+        let item = githubRepository.searchUsers(search: "sosohan", page: 1).toBlocking()
+        XCTAssert(try item.first()?.items.count == 12)
+        let empty = githubRepository.searchUsers(search: "", page: 1).toBlocking()
+        XCTAssertThrowsError(try empty.first()) { (error) in
+            XCTAssert("검색어를 입력해주세요." == error.localizedDescription)
+        }
+        
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testRepository_userDetail() {
+        let item = githubRepository.userDetail(userName: "sosohan-app").toBlocking()
+        XCTAssert(try item.first()?.login == "sosohan-app")
+        let empty = githubRepository.userDetail(userName: "").toBlocking()
+        XCTAssertThrowsError(try empty.first()) { (error) in
+            XCTAssert("유저 네임을 입력해주세요." == error.localizedDescription)
         }
     }
+    
+
 
 }
